@@ -1,53 +1,83 @@
-import { useRef, useState } from 'react'
-import ReactPlayer from 'react-player/lazy'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
+import ReactPlayer from 'react-player/file'
+
+type internalPlayerType = Record<string, any> | null
+
+type BitrateInfoType = {
+  bitrate: number
+  height: number
+  mediaType: string
+  qualityIndex: number
+  scanType: string
+  width: number
+}
 
 export const App = () => {
   const playerRef = useRef<ReactPlayer>(null)
-  const [isReady, setReady] = useState(false)
+  const [internalPlayer, setInternalPlayer] = useState<internalPlayerType>(null)
+  const [currentQuality, setCurrentQuality] = useState<number>(0)
 
-  const changeTime = (seconds: number) => {
-    if (!playerRef.current) return
-    const currentTime = playerRef.current.getCurrentTime()
-    playerRef.current.seekTo(currentTime + seconds)
+  const onChangeBitrate = (event: ChangeEvent<HTMLSelectElement>) => {
+    setCurrentQuality(Number(event.target.value))
   }
 
-  const onChangeBitrate = (event: any) => {
-    const internalPlayer = playerRef.current?.getInternalPlayer('hls')
-    if (internalPlayer) {
-      internalPlayer.currentLevel = event.target.value
-    }
-  }
+  useEffect(() => {
+    // internalPlayer?.updateSettings({
+    //   streaming: {
+    //     abr: {
+    //       autoSwitchBitrate: {
+    //         video: false,
+    //       },
+    //     },
+    //   },
+    // })
+    internalPlayer?.setQualityFor('video', currentQuality, true)
+  }, [currentQuality])
 
   return (
     <>
-      <ReactPlayer
-        ref={playerRef}
-        controls
-        onReady={() => setReady(true)}
-        onProgress={progress =>
-          console.log(playerRef.current?.getInternalPlayer('hls'))
-        }
-        config={{
-          file: {
-            forceHLS: true,
-          },
-        }}
-        url='http://sample.vodobox.net/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8'
-      />
+      <div style={{ border: '1px solid black' }}>
+        <ReactPlayer
+          ref={playerRef}
+          controls
+          onReady={() => {
+            if (!playerRef.current) return
+            const _internalPlayer = playerRef.current?.getInternalPlayer('dash')
+            setInternalPlayer(_internalPlayer)
+            setCurrentQuality(_internalPlayer?.getQualityFor('video'))
+          }}
+          onProgress={() => {
+            console.log(
+              internalPlayer,
+              internalPlayer?.getQualityFor('video'),
+              // internalPlayer?.getSettings().streaming,
+              // internalPlayer?.getBufferLength()
+            )
+          }}
+          config={{
+            forceDASH: true,
+          }}
+          url='https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+        />
+      </div>
       <div>
-        <button onClick={() => changeTime(10)}>+10s</button>
-        Quality:
-        {isReady && (
+        <div>
+          Quality: {currentQuality}
           <select onChange={onChangeBitrate}>
-            {playerRef.current
-              ?.getInternalPlayer('hls')
-              ?.levels.map((level: any, id: any) => (
-                <option key={id} value={id}>
-                  {level.bitrate}
+            {internalPlayer
+              ?.getBitrateInfoListFor('video')
+              .map((e: BitrateInfoType, idx: number) => (
+                <option key={e.bitrate} value={idx}>
+                  {e.height}
                 </option>
               ))}
           </select>
-        )}
+        </div>
+        <div>
+          <button onClick={() => internalPlayer?.setVolume(0.5)}>
+            Volume = 50
+          </button>
+        </div>
       </div>
     </>
   )
