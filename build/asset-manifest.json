@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/react-player/build/static/css/main.ece18321.css",
+    "main.js": "/react-player/build/static/js/main.dfe8dc29.js",
+    "static/media/play.svg": "/react-player/build/static/media/play.3e35cb49fcedaa4706e7f027b1144502.svg",
+    "index.html": "/react-player/build/index.html",
+    "main.ece18321.css.map": "/react-player/build/static/css/main.ece18321.css.map",
+    "main.dfe8dc29.js.map": "/react-player/build/static/js/main.dfe8dc29.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ece18321.css",
+    "static/js/main.dfe8dc29.js"
+  ]
+}

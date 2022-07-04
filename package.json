@@ -1,5 +1,6 @@
 {
   "name": "react-player",
+  "homepage": "https://dvornicked.github.io/react-player/build",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -10,10 +11,13 @@
     "@types/node": "^16.11.42",
     "@types/react": "^18.0.14",
     "@types/react-dom": "^18.0.5",
+    "classnames": "^2.3.1",
+    "dashjs": "^4.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-player": "^2.10.1",
     "react-scripts": "5.0.1",
+    "sass": "^1.53.0",
     "typescript": "^4.7.4",
     "web-vitals": "^2.1.4"
   },
