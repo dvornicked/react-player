@@ -32,7 +32,26 @@ export const Video = ({ src, resumedTime }: VideoProps) => {
   const [canPlay, setCanPlay] = useState(false)
   const [isPlaying, setIsPlaying] = useState(true)
   const [currentTime, setCurrentTime] = useState(0)
-  const [volumeIcon, setVolumeIcon] = useState(<VolumeUpIcon />)
+  const volumeRef = useRef<HTMLInputElement>(null)
+  const onVolumeClick = () => {
+    setSavedValue(+volumeRef.current!.value)
+    setVolumeIconMode(0)
+    volumeRef.current!.value = '0'
+    videoRef.current!.muted = true
+  }
+  const volumeIconList = [
+    <VolumeOffIcon
+      onClick={() => {
+        savedValue < 50 ? setVolumeIconMode(1) : setVolumeIconMode(2)
+        volumeRef.current!.value = '' + savedValue
+        videoRef.current!.muted = false
+      }}
+    />,
+    <VolumeDownIcon onClick={onVolumeClick} />,
+    <VolumeUpIcon onClick={onVolumeClick} />,
+  ]
+  const [volumeIconMode, setVolumeIconMode] = useState(2)
+  const [savedValue, setSavedValue] = useState(0)
 
   const [bitrateList, setBitrateList] = useState<BitrateInfo[]>([])
 
@@ -133,8 +152,9 @@ export const Video = ({ src, resumedTime }: VideoProps) => {
             />
           )}
           <div className={styles.volume}>
-            {volumeIcon}
+            {volumeIconList[volumeIconMode]}
             <input
+              ref={volumeRef}
               type='range'
               min={0}
               max={100}
@@ -144,17 +164,9 @@ export const Video = ({ src, resumedTime }: VideoProps) => {
                   const volume = +e.target.value
                   videoRef.current.volume = volume / 100
 
-                  switch (true) {
-                    case (volume === 0):
-                      setVolumeIcon(<VolumeOffIcon />)
-                      break
-                    case volume < 50:
-                      setVolumeIcon(<VolumeDownIcon />)
-                      break
-                    default:
-                      setVolumeIcon(<VolumeUpIcon />)
-                      break
-                  }
+                  if (!volume) setVolumeIconMode(0)
+                  else if (volume < 50) setVolumeIconMode(1)
+                  else setVolumeIconMode(2)
                 }
               }}
             />
