@@ -1,5 +1,6 @@
 // import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { Player } from './components/'
+import { Video } from './components/Player/Video/Video'
 // const src = ''
 
 // type BitrateInfoType = {
@@ -35,10 +36,11 @@ import { Player } from './components/'
 export const App = () => {
   const data = {
     preview: {
-      img: 'https://cloud.kodik-storage.com/ccef94adc005d0ce9a8c06f74211f9b3:2022070422/useruploads/208f3090-edbb-4103-94eb-2ef6393eb2cb/thumb005.jpg',
-      age: 18,
+      img: 'https://upload.wikimedia.org/wikipedia/commons/3/31/Big.Buck.Bunny.-.Frank.Bunny.png',
+      age_restriction: 18,
     },
-    src: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+    // src: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+    src: 'https://bitmovin-a.akamaihd.net/content/MI201109210084_1/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd'
   }
 
   return <Player {...data} />

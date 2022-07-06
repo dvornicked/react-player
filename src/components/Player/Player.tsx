@@ -6,7 +6,7 @@ import { Video } from './Video/Video'
 
 export interface PreviewData {
   img: string
-  age: number
+  age_restriction: number
 }
 
 export interface PlayerProps {
@@ -32,6 +32,7 @@ export const Player = ({ preview, src }: PlayerProps) => {
       ) : (
         <Video src={src} resumedTime={resumedTime} />
       )}
+      {/* <Video src={src} resumedTime={resumedTime} /> */}
     </div>
   )
 }

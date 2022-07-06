@@ -1,8 +1,17 @@
 import dashjs, { BitrateInfo } from 'dashjs'
 import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import cn from 'classnames'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
+import VolumeUpIcon from '@mui/icons-material/VolumeUp'
+import FullscreenIcon from '@mui/icons-material/Fullscreen'
+import PictureInPictureAltIcon from '@mui/icons-material/PictureInPictureAlt'
+import PauseIcon from '@mui/icons-material/Pause'
+import SettingsIcon from '@mui/icons-material/Settings'
 import { Spinner } from '../..'
 import styles from './Video.module.scss'
+import { progresToTime } from '../Preview/Preview'
+import VolumeOffIcon from '@mui/icons-material/VolumeOff'
+import VolumeDownIcon from '@mui/icons-material/VolumeDown'
 
 interface VideoProps {
   src: string
@@ -12,7 +21,19 @@ interface VideoProps {
 export const Video = ({ src, resumedTime }: VideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const playerRef = useRef<dashjs.MediaPlayerClass>()
+
+  const speedValueList = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+  const [currentSpeed, setCurrentSpeed] = useState<number>(1)
+  useEffect(() => {
+    if (!videoRef.current) return
+    videoRef.current.playbackRate = currentSpeed
+  }, [currentSpeed])
+
   const [canPlay, setCanPlay] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(true)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [volumeIcon, setVolumeIcon] = useState(<VolumeUpIcon />)
+
   const [bitrateList, setBitrateList] = useState<BitrateInfo[]>([])
 
   // -1 is Auto; 0-Infinite - defined value
@@ -37,19 +58,31 @@ export const Video = ({ src, resumedTime }: VideoProps) => {
   }
 
   useEffect(() => {
+    if (!videoRef.current) return
+    isPlaying ? videoRef.current.play() : videoRef.current.pause()
+  }, [isPlaying])
+
+  useEffect(() => {
     const video = videoRef.current
-    console.log(video)
     if (!video) return
 
     const player = dashjs.MediaPlayer().create()
 
     player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, () => {
-      if (resumedTime && videoRef.current) videoRef.current.currentTime = resumedTime
+      if (resumedTime && videoRef.current)
+        videoRef.current.currentTime = resumedTime
       setBitrateList(player.getBitrateInfoListFor('video'))
     })
 
-    player.on(dashjs.MediaPlayer.events.CAN_PLAY, () => setCanPlay(true))
-    player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, () => localStorage.removeItem('progress'))
+    player.on(dashjs.MediaPlayer.events.CAN_PLAY, () => {
+      setCanPlay(true)
+      if (videoRef.current)
+        videoRef.current.ontimeupdate = e => setCurrentTime(e.timeStamp / 1000)
+    })
+
+    player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, () =>
+      localStorage.removeItem('progress')
+    )
 
     player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, e => {
       if (currentQuality === -1) {
@@ -64,25 +97,79 @@ export const Video = ({ src, resumedTime }: VideoProps) => {
       )
     )
 
-    player.initialize(video, src, false)
+    player.initialize(video, src, true)
     playerRef.current = player
   }, [])
 
   return (
-    <>
+    <div className={styles.root}>
       <video
         className={cn(styles.video, {
           [styles.hidden]: !canPlay,
         })}
-        autoPlay
-        controls
         ref={videoRef}
       />
-      <Spinner
-        className={cn(styles.video, {
-          [styles.hidden]: canPlay,
-        })}
-      />
-    </>
+
+      {/* <div className={styles.settings}>
+        <ul>
+          {speedValueList.map(speedValue => (
+            <li key={speedValue} onClick={() => setCurrentSpeed(speedValue)}>
+              {speedValue}
+            </li>
+          ))}
+        </ul>
+      </div> */}
+      {canPlay ? (
+        <div className={styles.controls}>
+          {isPlaying ? (
+            <PauseIcon
+              onClick={() => setIsPlaying(false)}
+              className={styles.play}
+            />
+          ) : (
+            <PlayArrowIcon
+              onClick={() => setIsPlaying(true)}
+              className={styles.play}
+            />
+          )}
+          <div className={styles.volume}>
+            {volumeIcon}
+            <input
+              type='range'
+              min={0}
+              max={100}
+              defaultValue={100}
+              onChange={e => {
+                if (videoRef.current) {
+                  const volume = +e.target.value
+                  videoRef.current.volume = volume / 100
+
+                  switch (true) {
+                    case (volume === 0):
+                      setVolumeIcon(<VolumeOffIcon />)
+                      break
+                    case volume < 50:
+                      setVolumeIcon(<VolumeDownIcon />)
+                      break
+                    default:
+                      setVolumeIcon(<VolumeUpIcon />)
+                      break
+                  }
+                }
+              }}
+            />
+          </div>
+          <span className={styles.timer}>
+            {progresToTime(currentTime)} /
+            {videoRef.current && progresToTime(videoRef.current.duration)}
+          </span>
+          <SettingsIcon />
+          <PictureInPictureAltIcon />
+          <FullscreenIcon className={styles.fullscreen} />
+        </div>
+      ) : (
+        <Spinner className={styles.spinner} />
+      )}
+    </div>
   )
 }
